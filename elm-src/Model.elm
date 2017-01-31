@@ -6,4 +6,7 @@ type alias Todo =
   , text : String
   }
 
-type alias Model = [ Todo ]
+type alias Model =
+  { todos : [ Todo ]
+  , newText : String
+  }

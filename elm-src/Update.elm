@@ -9,7 +9,8 @@ type alias Text = String
 type alias Id = Int
 
 type alias Msg
-  = AddTodo Text
+  = ChangeNewText Text
+  | AddTodo
   | DeleteTodo Id
   | EditTodo Id Text
   | CompleteTodo Id
@@ -19,46 +20,48 @@ type alias Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
   case msg of
-    AddTodo newText ->
+    ChangeNewText text ->
+      ( { model | newText = text }, Cmd.none )
+    AddTodo ->
       let newId = (L.foldr getMaxId -1 model.todos) + 1
-          newTodo = { id = newId, completed = False, text = newText }
-          newModel = newTodo :: model
+          newTodo = { id = newId, completed = False, text = model.newText }
+          newTodos = newTodo :: model.todos
       in
-          ( newModel, Cmd.none )
+          ( { model | todos = newTodos, newText = "" }, Cmd.none )
 
     DeleteTodo targetId ->
-      let newModel = L.filter (\todo -> todo.id /= targetId) model
+      let newTodos = L.filter (\todo -> todo.id /= targetId) model.todos
       in
-          ( newModel, Cmd.none )
+          ( { model | todos = newTodos }, Cmd.none )
 
     EditTodo targetId newText ->
-      let newModel = L.map (\todo ->
+      let newTodos = L.map (\todo ->
           if todo.id /= targetId
             then todo
             else { todo | text = newText }
-          ) model
+          ) model.todos
       in
-          ( newModel, Cmd.none )
+          ( { model | todos = newTodos }, Cmd.none )
 
     CompleteTodo targetId ->
-      let newModel = L.map (\todo ->
+      let newTodos = L.map (\todo ->
           if todo.id /= targetId
             then todo
             else { todo | completed = !todo.completed }
-          ) model
+          ) model.todos
       in
-          ( newModel, Cmd.none )
+          ( { model | todos = newTodos }, Cmd.none )
 
     CompleteAll ->
-      let newModel = L.map (\todo -> { todo | completed = True } ) model
+      let newTodos = L.map (\todo -> { todo | completed = True } ) model.todos
       in
-          ( newModel, Cmd.none )
+          ( { model | todos = newTodos }, Cmd.none )
 
     ClearCompleted ->
-      let newModel = L.filter (\todo -> !todo.completed) model
+      let newTodos = L.filter (\todo -> !todo.completed) model.todos
       in
-          ( newModel, Cmd.none )
+          ( { model | todos = newTodos }, Cmd.none )
 
 
 getMaxId : Todo -> Id -> Id
-getMaxId todo id = max (odostodo.id, id)
+getMaxId todo id = max (todo.id, id)
